@@ -1,0 +1,27 @@
+//finds all submatrices of the degree 4 Macaulay matrix for which the bijection condition holds and the determinant is zero
+
+R = CC[a,b,c,d,e,f][x,y,z,MonomialOrder => Lex]
+F = a*x^2+b*x*y+c*x*z+d*y^2+e*y*z+f*z^2
+
+MacaulayMatrix = (d,I)->(
+    R:=ring I;
+    varsR:=gens R;
+    Monsd:=flatten entries basis(d,R);
+    Id= super basis(d,I);
+    columnsM=apply(flatten entries Id,f->((coefficients(f,Monomials=>Monsd))_1));
+    M=columnsM_0;
+    scan(#columnsM-1,i->(M=M|columnsM_(i+1)));
+    return(transpose(M));
+);
+
+mac = MacaulayMatrix(4, ideal F)
+
+shape = m -> matrix for row in entries(m) list for entry in row list if entry != 0 then 1 else 0
+
+ones = l -> #select(l, i->i==1)
+
+subsetCondition = (subset,M) -> #select(entries transpose(M^subset), entry->ones entry>0) == #subset
+
+indivCondition = matrix -> #select(for sub in subsets(6)-set({},{0,1,2,3,4,5}) list subsetCondition(sub, shape matrix), i -> i==true) == 0
+
+select(detzero, m->indivCondition submatrix(mac,,m))
