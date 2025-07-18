@@ -1,0 +1,41 @@
+//generate the degree d Macaulay matrix for a given ideal
+
+MacaulayMatrix = (d,I)->(
+    R:=ring I;
+    varsR:=gens R;
+    Monsd:=flatten entries basis(d,R);
+    Id= super basis(d,I);
+    columnsM=apply(flatten entries Id,f->((coefficients(f,Monomials=>Monsd))_1));
+    M=columnsM_0;
+    scan(#columnsM-1,i->(M=M|columnsM_(i+1)));
+    return(transpose(M));
+);
+
+
+//for a given matrix, replace non-zero entries with ones
+
+shape = m -> matrix for row in entries(m) list for entry in row list if entry != 0 then 1 else 0
+
+
+//count the number of ones in a row
+
+ones = l -> #select(l, i->i==1)
+
+
+//indivCondition ascertains whether Hall's condition holds for a certain matrix
+
+subsetCondition = (subset,M) -> #select(entries transpose(M^subset), entry->ones entry>0) == #subset
+
+indivCondition = matrix -> #select(for sub in subsets(6)-set({},{0,1,2,3,4,5}) list subsetCondition(sub, shape matrix), i -> i==true) == 0
+
+
+//check if a matrix has a row full of zeroes
+
+hasZero = matrix -> #select(for row in entries matrix list if row=={0,0,0,0,0,0} then true else false, i->i==true) == 0
+
+
+//get the monomials indexing a particular subset of indices for the Macaulay matrix
+
+mons = flatten entries basis(d,R)
+
+getCoeffs = l -> for i in l list mons#i
